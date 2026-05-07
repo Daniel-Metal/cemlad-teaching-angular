@@ -1,16 +1,17 @@
 {
-  "name": "learng-angular",
-  "version": "0.0.0",
+  "name": "learning-angular",
+  "version": "0.0.1",
+  "node-version": "^24.14.1",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:learng-angular": "node dist/learng-angular/server/server.mjs"
+    "serve:ssr:learning-angular": "node dist/learning-angular/server/server.mjs"
   },
   "private": true,
-  "packageManager": "npm@11.11.0",
+  "packageManager": "pnpm@10.32.1",
   "dependencies": {
     "@angular/common": "^21.2.0",
     "@angular/compiler": "^21.2.0",
