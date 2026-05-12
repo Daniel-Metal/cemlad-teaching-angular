@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:8002/api/schema/?format=json)",
+      "Bash(python -c \"import sys,json; data=json.load\\(sys.stdin\\); print\\(json.dumps\\({k: data[k] for k in ['paths', 'components']}, indent=2\\)\\)\")",
+      "Bash(pnpm run *)"
+    ]
+  }
+}

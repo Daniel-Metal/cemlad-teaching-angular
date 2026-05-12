@@ -1,0 +1,199 @@
+<div class="min-h-screen bg-slate-50">
+
+  @if (cart(); as cart) {
+    <!-- Page Header -->
+    <div class="bg-white border-b border-slate-200">
+      <div class="max-w-4xl mx-auto px-6 py-5">
+        <div class="flex items-center gap-3 mb-4">
+          <a routerLink="/carts"
+             class="w-9 h-9 bg-slate-100 hover:bg-slate-200 rounded-xl flex items-center justify-center transition-colors">
+            <svg class="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </a>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-xl font-bold text-slate-900">Carrito #{{ cart.id }}</h1>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold" [class]="getStatusClass(cart.status)">
+                {{ getStatusLabel(cart.status) }}
+              </span>
+            </div>
+            <p class="text-slate-500 text-sm mt-0.5">Cliente #{{ cart.customer_id }}</p>
+          </div>
+        </div>
+
+        <!-- Cart Summary Bar -->
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 flex items-center gap-2">
+            <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+            <span class="text-sm text-slate-600"><strong class="text-slate-900">{{ cart.products.length }}</strong> producto(s)</span>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 flex items-center gap-2">
+            <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span class="text-sm text-slate-600">Total: <strong class="text-slate-900">{{ cart.total | currency:'USD' }}</strong></span>
+          </div>
+
+          @if (cart.status === 'ACT') {
+            <div class="ml-auto flex items-center gap-2">
+              <button (click)="showAddProductModal.set(true)"
+                      class="inline-flex items-center gap-2 bg-white border border-indigo-300 hover:bg-indigo-50 text-indigo-600 px-3 py-2 rounded-xl text-sm font-medium transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+                Agregar Producto
+              </button>
+              <button (click)="showPaymentModal.set(true)"
+                      class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                </svg>
+                Pagar Carrito
+              </button>
+            </div>
+          }
+          @if (cart.status === 'PAID') {
+            <div class="ml-auto flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-xl">
+              <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-sm font-medium text-blue-700">Pago completado</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="max-w-4xl mx-auto px-6 py-8">
+
+      <!-- Products Table -->
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          <h2 class="font-semibold text-slate-900">Productos en el carrito</h2>
+          @if (cart.products.length > 0) {
+            <span class="text-xs text-slate-400">{{ cart.products.length }} item(s)</span>
+          }
+        </div>
+
+        @if (cart.products.length > 0) {
+          <table class="w-full">
+            <thead>
+              <tr class="bg-slate-50/70">
+                <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Producto</th>
+                <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">ID</th>
+                <th class="text-right px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Precio</th>
+                @if (cart.status === 'ACT') {
+                  <th class="px-6 py-3"></th>
+                }
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              @for (product of cart.products; track product.product_id) {
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                      <div class="w-9 h-9 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg class="w-4.5 h-4.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                      </div>
+                      <span class="font-medium text-slate-900 text-sm">{{ product.product_name }}</span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 hidden sm:table-cell">
+                    <span class="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">#{{ product.product_id }}</span>
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <span class="font-bold text-slate-900">{{ product.price | currency:'USD' }}</span>
+                  </td>
+                  @if (cart.status === 'ACT') {
+                    <td class="px-6 py-4 text-right">
+                      @if (deleteConfirmProductId() === product.product_id) {
+                        <div class="flex items-center justify-end gap-2">
+                          <button (click)="cancelRemove()" class="text-xs text-slate-500 hover:text-slate-700 px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors">
+                            Cancelar
+                          </button>
+                          <button (click)="removeProduct()" class="text-xs text-white bg-rose-500 hover:bg-rose-600 px-2 py-1 rounded-lg transition-colors">
+                            Confirmar
+                          </button>
+                        </div>
+                      } @else {
+                        <button (click)="confirmRemove(product.product_id)"
+                                class="w-8 h-8 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl flex items-center justify-center transition-colors ml-auto">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                          </svg>
+                        </button>
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+
+          <!-- Total Row -->
+          <div class="px-6 py-4 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between">
+            <span class="font-semibold text-slate-700">Total del carrito</span>
+            <span class="text-2xl font-bold text-slate-900">{{ cart.total | currency:'USD' }}</span>
+          </div>
+
+        } @else {
+          <!-- Empty products state -->
+          <div class="flex flex-col items-center justify-center py-16 text-center">
+            <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-3">
+              <svg class="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+              </svg>
+            </div>
+            <p class="text-slate-900 font-semibold">Carrito vacio</p>
+            <p class="text-slate-500 text-sm mt-1">Este carrito no tiene productos aun</p>
+            @if (cart.status === 'ACT') {
+              <button (click)="showAddProductModal.set(true)"
+                      class="mt-4 inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 text-sm font-medium border border-indigo-200 hover:border-indigo-300 px-4 py-2 rounded-xl transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+                Agregar primer producto
+              </button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Modals -->
+    <app-payment-modal
+      [show]="showPaymentModal()"
+      [cart]="cart"
+      (close)="showPaymentModal.set(false)"
+      (paid)="onPaid()">
+    </app-payment-modal>
+
+    <app-add-product-modal
+      [show]="showAddProductModal()"
+      [existingProductIds]="existingProductIds()"
+      (close)="showAddProductModal.set(false)"
+      (add)="onProductAdded($event)">
+    </app-add-product-modal>
+
+  } @else {
+    <!-- Cart Not Found -->
+    <div class="flex flex-col items-center justify-center min-h-screen text-center px-6">
+      <div class="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
+        <svg class="w-10 h-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <h2 class="text-xl font-bold text-slate-900">Carrito no encontrado</h2>
+      <p class="text-slate-500 text-sm mt-1">El carrito #{{ cartId }} no existe.</p>
+      <a routerLink="/carts" class="mt-6 inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors">
+        Volver a Carritos
+      </a>
+    </div>
+  }
+</div>
