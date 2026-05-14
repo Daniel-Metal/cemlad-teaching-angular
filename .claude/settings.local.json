@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:8002/api/schema/?format=json)",
+      "Bash(python -c \"import sys,json; data=json.load\\(sys.stdin\\); print\\(json.dumps\\({k: data[k] for k in ['paths', 'components']}, indent=2\\)\\)\")",
+      "Bash(pnpm run *)",
+      "Bash(curl -s \"http://localhost:8002/api/schema/?format=json\")",
+      "Bash(python -c \"import json,sys; data=json.load\\(sys.stdin\\); paths={k:v for k,v in data['paths'].items\\(\\) if 'cart' in k.lower\\(\\)}; print\\(json.dumps\\(paths, indent=2\\)\\)\")",
+      "Bash(npx tsc *)"
+    ]
+  }
+}
