@@ -6,9 +6,9 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root',
 })
 export abstract class HttpClientService {
-  private http = inject(HttpClient);
+  protected http = inject(HttpClient);
 
-  private baseUrl = environment.apiBaseUrl;
+  protected baseUrl = environment.apiBaseUrl;
 
   constructor(@Inject('PATH') private path: string) {}
 
@@ -24,15 +24,15 @@ export abstract class HttpClientService {
     return this.http.post<T>(`${this.baseUrl}/${this.path}`, data);
   }
 
-  public update<T>(id: string, data: any) {
+  public update<T>(id: string|number, data: any) {
     return this.http.put<T>(`${this.baseUrl}/${this.path}/${id}`, data);
   }
 
-  public patch<T>(id: string, data: any) {
+  public patch<T>(id: string|number, data: any) {
     return this.http.patch<T>(`${this.baseUrl}/${this.path}/${id}`, data);
   }
 
-  public delete<T>(id: string) {
+  public delete<T>(id: string|number) {
     return this.http.delete<T>(`${this.baseUrl}/${this.path}/${id}`);
   }
 }

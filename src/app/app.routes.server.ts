@@ -6,6 +6,10 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client
   },
   {
+    path: 'carts',
+    renderMode: RenderMode.Client
+  },
+  {
     path: 'carts/:id',
     renderMode: RenderMode.Client
   },

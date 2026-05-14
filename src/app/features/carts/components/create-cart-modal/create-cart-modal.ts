@@ -10,8 +10,16 @@ import { FormsModule } from '@angular/forms';
 export class CreateCartModal {
   @Input() show = false;
   @Output() close = new EventEmitter<void>();
+  @Output() created = new EventEmitter<number>();
 
   customerId: number | null = null;
+
+  onCreate(): void {
+    if (this.customerId) {
+      this.created.emit(this.customerId);
+      this.customerId = null;
+    }
+  }
 
   onClose(): void {
     this.customerId = null;

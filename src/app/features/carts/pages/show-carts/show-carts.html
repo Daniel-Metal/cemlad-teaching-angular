@@ -62,8 +62,7 @@
       @for (tab of [
         {value: 'ALL', label: 'Todos', count: carts().length},
         {value: 'ACT', label: 'Activos', count: activeCarts()},
-        {value: 'PAID', label: 'Pagados', count: paidCarts()},
-        {value: 'CANC', label: 'Cancelados', count: carts().length - activeCarts() - paidCarts()}
+        {value: 'PAG', label: 'Pagados', count: paidCarts()}
       ]; track tab.value) {
         <button (click)="filterStatus.set($any(tab.value))"
                 class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors"
@@ -112,7 +111,7 @@
                   <span class="text-xs text-slate-400">Sin productos</span>
                 } @else {
                   <span class="text-xs text-slate-600 truncate">
-                    {{ cart.products.length }} producto(s): {{ cart.products[0].product_name }}
+                    {{ cart.products.length }} producto(s): {{ cart.products[0].name }}
                     @if (cart.products.length > 1) {
                       <span class="text-slate-400"> +{{ cart.products.length - 1 }} más</span>
                     }
@@ -152,5 +151,6 @@
 <!-- Create Cart Modal -->
 <app-create-cart-modal
   [show]="showCreateModal()"
-  (close)="showCreateModal.set(false)">
+  (close)="showCreateModal.set(false)"
+  (created)="onCartCreated($event)">
 </app-create-cart-modal>

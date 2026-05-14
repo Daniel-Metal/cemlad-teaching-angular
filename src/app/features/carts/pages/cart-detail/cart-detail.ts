@@ -1,68 +1,53 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
-import { Cart, CartStatus, CartProduct, CART_STATUS_LABELS } from '../../models/cart.model';
+import { Cart } from '../../models/cart.model';
 import { Product } from '../../../products/models/product.model';
+
+type CartWithProducts = Cart & { products: Product[] };
 import { PaymentModal } from '../../components/payment-modal/payment-modal';
 import { AddProductModal } from '../../components/add-product-modal/add-product-modal';
-
-const MOCK_CARTS: Cart[] = [
-  {
-    id: 1, customer_id: 101, status: 'ACT', total: 1389.98,
-    products: [
-      { product_id: 1, product_name: 'Laptop Dell XPS 15', price: 1299.99 },
-      { product_id: 6, product_name: 'Webcam Logitech C920', price: 79.99 },
-    ],
-  },
-  {
-    id: 2, customer_id: 102, status: 'PAID', total: 449.99,
-    products: [
-      { product_id: 4, product_name: 'Monitor 4K LG 27"', price: 449.99 },
-    ],
-  },
-  {
-    id: 3, customer_id: 103, status: 'CANC', total: 0,
-    products: [],
-  },
-  {
-    id: 4, customer_id: 104, status: 'ACT', total: 209.98,
-    products: [
-      { product_id: 2, product_name: 'Mouse Logitech MX Master 3', price: 89.99 },
-      { product_id: 3, product_name: 'Teclado Mecanico Keychron K2', price: 119.99 },
-    ],
-  },
-  {
-    id: 5, customer_id: 105, status: 'ACT', total: 499.98,
-    products: [
-      { product_id: 5, product_name: 'Auriculares Sony WH-1000XM5', price: 349.99 },
-      { product_id: 7, product_name: 'SSD Samsung 1TB', price: 129.99 },
-    ],
-  },
-  {
-    id: 6, customer_id: 106, status: 'PAID', total: 169.98,
-    products: [
-      { product_id: 7, product_name: 'SSD Samsung 1TB', price: 129.99 },
-      { product_id: 8, product_name: 'Hub USB-C Anker 7-en-1', price: 49.99 },
-    ],
-  },
-];
+import { CartService } from '../../services/cart.service';
+import { CartStatus, CART_STATUS_LABELS, PaymentMethod } from '../../enums/cart.enum';
 
 @Component({
   selector: 'app-cart-detail',
   imports: [CommonModule, RouterLink, PaymentModal, AddProductModal],
   templateUrl: './cart-detail.html',
 })
-export class CartDetail {
+export class CartDetail implements OnInit {
   private route = inject(ActivatedRoute);
+  private cartService = inject(CartService);
 
   cartId = Number(this.route.snapshot.paramMap.get('id'));
-  cart = signal<Cart | undefined>(MOCK_CARTS.find(c => c.id === this.cartId));
+  cart = signal<CartWithProducts | undefined>(undefined);
 
   showPaymentModal = signal(false);
   showAddProductModal = signal(false);
   deleteConfirmProductId = signal<number | null>(null);
 
-  existingProductIds = computed(() => this.cart()?.products.map(p => p.product_id) ?? []);
+  existingProductIds = computed(() => this.cart()?.products.map(p => p.id) ?? []);
+
+  ngOnInit() {
+    this.loadCart();
+  }
+
+  loadCart() {
+    this.cartService.getCartById(this.cartId).subscribe({
+      next: cart => this.cart.set({ ...cart, products: [] }),
+      error: err => console.error('Error fetching cart:', err),
+    });
+
+    this.cartService.getProductsInCart(this.cartId).subscribe({
+      next: products => {
+        const currentCart = this.cart();
+        if (currentCart) {
+          this.cart.set({ ...currentCart, products: products.flat() });
+        }
+      },
+      error: err => console.error('Error fetching cart products:', err),
+    });
+  }
 
   confirmRemove(productId: number): void {
     this.deleteConfirmProductId.set(productId);
@@ -73,40 +58,53 @@ export class CartDetail {
   }
 
   removeProduct(): void {
-    const id = this.deleteConfirmProductId();
-    if (id !== null) {
-      this.cart.update(c => {
-        if (!c) return c;
-        const products = c.products.filter(p => p.product_id !== id);
-        return { ...c, products, total: products.reduce((s, p) => s + p.price, 0) };
-      });
-      this.deleteConfirmProductId.set(null);
-    }
-  }
-
-  onProductAdded(product: Product): void {
-    this.cart.update(c => {
-      if (!c) return c;
-      const newProduct: CartProduct = {
-        product_id: product.id,
-        product_name: product.name,
-        price: product.price,
-      };
-      const products = [...c.products, newProduct];
-      return { ...c, products, total: products.reduce((s, p) => s + p.price, 0) };
+    const productId = this.deleteConfirmProductId();
+    if (productId === null) return;
+    this.cartService.removeProductFromCart(this.cartId, productId).subscribe({
+      next: updatedCart => {
+        this.cart.set({ ...updatedCart, products: updatedCart.products?.flat() ?? [] });
+        this.deleteConfirmProductId.set(null);
+        this.cartService.notifyCartsUpdated();
+      },
+      error: err => console.error('Error removing product:', err),
     });
   }
 
-  onPaid(): void {
-    this.cart.update(c => (c ? { ...c, status: 'PAID' } : c));
-    this.showPaymentModal.set(false);
+  onProductAdded(product: Product): void {
+    this.cartService.addProductToCart(this.cartId, product.id).subscribe({
+      next: () => {
+        this.cartService.getCartById(this.cartId).subscribe({
+          next: updatedCart => {
+            this.cartService.getProductsInCart(this.cartId).subscribe({
+              next: products => {
+                this.cart.set({ ...updatedCart, products: products.flat() });
+                this.cartService.notifyCartsUpdated();
+              },
+              error: err => console.error('Error fetching cart products:', err),
+            });
+          },
+          error: err => console.error('Error fetching cart:', err),
+        });
+      },
+      error: err => console.error('Error adding product:', err),
+    });
+  }
+
+  onPaid(method: PaymentMethod): void {
+    this.cartService.payCart(this.cartId, method).subscribe({
+      next: () => {
+        this.loadCart();
+        this.showPaymentModal.set(false);
+        this.cartService.notifyCartsUpdated();
+      },
+      error: err => console.error('Error processing payment:', err),
+    });
   }
 
   getStatusClass(status: CartStatus): string {
     const map: Record<CartStatus, string> = {
       ACT: 'bg-emerald-100 text-emerald-700',
-      PAID: 'bg-blue-100 text-blue-700',
-      CANC: 'bg-rose-100 text-rose-700',
+      PAG: 'bg-blue-100 text-blue-700',
     };
     return map[status];
   }

@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Cart, PaymentMethod } from '../../models/cart.model';
+import { Cart } from '../../models/cart.model';
+import { PaymentMethod } from '../../enums/cart.enum';
 
 @Component({
   selector: 'app-payment-modal',

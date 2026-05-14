@@ -44,11 +44,15 @@ export class ShowProducts implements OnInit {
   totalValue = computed(() => this.products().reduce((sum, p) => sum + p.price, 0));
   avgPrice = computed(() => (this.products().length > 0 ? this.totalValue() / this.products().length : 0));
 
-  ngOnInit() {
+  loadProducts() {
     this.productService.getAllProducts().subscribe({
       next: products => this.products.set(products),
       error: err => console.error('Error fetching products:', err)
     });
+  }
+
+  ngOnInit() {
+    this.loadProducts();
   }
 
   onSearch(event: Event) {
@@ -61,23 +65,39 @@ export class ShowProducts implements OnInit {
   }
 
   editProduct(p: Product) {
-    this.selectedProduct.set(p);
+    this.productService.getProductById(p.id.toString()).subscribe({
+      next: product => {
+        this.selectedProduct.set(product);
+        this.showDetailModal.set(true);
+      },
+      error: err => console.error('Error fetching product details:', err)
+    });
+
     this.showModal.set(true);
   }
 
   viewProduct(p: Product) {
-    this.selectedProduct.set(p);
+    this.productService.getProductById(p.id.toString()).subscribe({
+      next: product => {
+        this.selectedProduct.set(product);
+        this.showDetailModal.set(true);
+      },
+      error: err => console.error('Error fetching product details:', err)
+    });
+
     this.showDetailModal.set(true);
   }
 
   closeModal() {
     this.showModal.set(false);
     this.selectedProduct.set(null);
+    this.loadProducts();
   }
 
   closeDetail() {
     this.showDetailModal.set(false);
     this.selectedProduct.set(null);
+    this.loadProducts();
   }
 
   confirmDelete(id: number) {
@@ -89,11 +109,15 @@ export class ShowProducts implements OnInit {
   }
 
   executeDelete() {
-    const id = this.deleteConfirmId();
-    if (id !== null) {
-      this.products.update(ps => ps.filter(p => p.id !== id));
-      this.deleteConfirmId.set(null);
-    }
+    this.productService.deleteProduct(this.deleteConfirmId()!).subscribe({
+      next: () => {
+        console.log("Product deleted successfully");
+
+        this.loadProducts();
+        this.deleteConfirmId.set(null);
+      },
+      error: err => console.error('Error deleting product:', err)
+    });
   }
 
   getGradient(index: number): string {
